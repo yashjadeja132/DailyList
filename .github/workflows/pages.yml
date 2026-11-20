@@ -42,6 +42,11 @@ jobs:
         working-directory: admin/dist
         run: |
           cp index.html 404.html
+          # GitHub Pages answers unknown paths with status 404 (even when 404.html shows the page).
+          # Store checks and search engines want 200, so give each public page its own real file.
+          for p in privacy terms pricing delete-account login panel; do
+            mkdir -p "$p" && cp index.html "$p/index.html"
+          done
           echo "dailylist.yashrajsinhjadeja.com" > CNAME
       - uses: actions/upload-pages-artifact@v3
         with:
