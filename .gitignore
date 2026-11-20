@@ -31,3 +31,10 @@ app/android/app/.cxx/
 # temporary test helpers
 app/ui.sh
 app/ui.xml
+
+# Android signing: the upload key and its passwords stay on this PC
+app/android/keystore.properties
+keystore.properties
+*.jks
+*.keystore
+!app/android/app/debug.keystore
