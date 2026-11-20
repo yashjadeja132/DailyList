@@ -1,0 +1,55 @@
+# Publishes the DailyList website (home, privacy, terms) to GitHub Pages at dailylist.yashrajsinhjadeja.com.
+# The shop server and the admin panel are not part of this: they need a real server.
+name: Deploy website
+
+on:
+  push:
+    branches: [main]
+    paths: ['admin/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+      - run: npm ci
+        working-directory: admin
+      - run: npm run build
+        working-directory: admin
+        env:
+          VITE_SITE_ONLY: 'true'
+          # address of the shop server (for download links and plans), set it as a repository variable when the server is online
+          VITE_API_URL: ${{ vars.API_URL }}
+      - name: Single page app support and custom domain
+        working-directory: admin/dist
+        run: |
+          cp index.html 404.html
+          echo "dailylist.yashrajsinhjadeja.com" > CNAME
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: admin/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

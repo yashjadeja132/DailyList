@@ -12,7 +12,8 @@ createRoot(document.getElementById('root')).render(
   <BrowserRouter>
     <Suspense fallback={null}>
       <Routes>
-        <Route path="/panel/*" element={<PanelApp />} />
+        {/* the admin panel needs the shop server, so a static copy of the website (VITE_SITE_ONLY) leaves it out */}
+        {import.meta.env.VITE_SITE_ONLY ? null : <Route path="/panel/*" element={<PanelApp />} />}
         <Route path="/*" element={<PublicSite />} />
       </Routes>
     </Suspense>

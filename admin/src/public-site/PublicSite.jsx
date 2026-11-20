@@ -7,7 +7,7 @@ import Privacy from './Privacy.jsx';
 import Terms from './Terms.jsx';
 import { CartIcon, telHref } from './shared.jsx';
 
-const BASE = import.meta.env.DEV ? 'http://localhost:3000' : '';
+const BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3000' : '');
 
 /** Settings the admin can change (download links, version, support email). */
 function useAppInfo() {

@@ -51,7 +51,7 @@ export function ContactDetails({ info }) {
 }
 
 // ---- plans (read from the admin panel's live plans)
-export const BASE = import.meta.env.DEV ? 'http://localhost:3000' : '';
+export const BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3000' : '');
 export const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 export const money = (n) => '₹' + (Math.round(n * 100) / 100).toLocaleString('en-IN');
 
