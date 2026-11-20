@@ -10,10 +10,17 @@ import { CartIcon, telHref } from './shared.jsx';
 const BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3000' : '');
 
 /** Settings the admin can change (download links, version, support email). */
+// A static copy of the site (GitHub Pages) has no server to ask, so it falls back to values set when it is built.
+const FALLBACK = {
+  play_store_url: import.meta.env.VITE_PLAY_STORE_URL || '',
+  support_email: import.meta.env.VITE_SUPPORT_EMAIL || '',
+  support_phone: import.meta.env.VITE_SUPPORT_PHONE || '',
+};
+
 function useAppInfo() {
-  const [info, setInfo] = useState({});
+  const [info, setInfo] = useState(FALLBACK);
   useEffect(() => {
-    fetch(BASE + '/public/app-info').then((r) => r.json()).then(setInfo).catch(() => {});
+    fetch(BASE + '/public/app-info').then((r) => r.json()).then((r) => setInfo({ ...FALLBACK, ...r })).catch(() => {});
   }, []);
   return info;
 }

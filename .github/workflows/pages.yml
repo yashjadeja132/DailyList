@@ -35,6 +35,10 @@ jobs:
           VITE_SITE_ONLY: 'true'
           # address of the shop server (for download links and plans), set it as a repository variable when the server is online
           VITE_API_URL: ${{ vars.API_URL }}
+          # shown on the website when there is no server to ask
+          VITE_PLAY_STORE_URL: https://play.google.com/store/apps/details?id=com.dailylist
+          VITE_SUPPORT_EMAIL: yashrajsinhjadeja757@gmail.com
+          VITE_SUPPORT_PHONE: '+91 97255 25757'
       - name: Single page app support and custom domain
         working-directory: admin/dist
         run: |
