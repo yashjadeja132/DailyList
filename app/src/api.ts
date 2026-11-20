@@ -38,7 +38,8 @@ export type Order = {
 };
 
 // `adb reverse tcp:3000 tcp:3000` lets a USB-connected phone reach the PC at localhost.
-export const DEFAULT_URL = 'http://localhost:3000';
+// While developing, a USB phone reaches this PC through adb reverse. Release builds talk to the live server.
+export const DEFAULT_URL = __DEV__ ? 'http://localhost:3000' : 'https://dailylist-api.yashrajsinhjadeja.com';
 
 let baseUrl = DEFAULT_URL;
 let token = '';

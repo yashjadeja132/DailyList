@@ -1,0 +1,15 @@
+[Unit]
+Description=DailyList API server
+After=network.target redis-server.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/DailyList/server
+ExecStart=/usr/bin/node index.js
+Restart=always
+RestartSec=3
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
