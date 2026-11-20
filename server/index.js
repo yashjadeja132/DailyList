@@ -249,14 +249,21 @@ app.post('/auth/check', (req, res) => {
   res.json({ exists: !!db.prepare('SELECT id FROM users WHERE phone = ?').get(phone) });
 });
 
+// Test accounts for the Google Play reviewers: these phone numbers always get the fixed code REVIEW_OTP and no SMS is sent.
+//   REVIEW_PHONES=9000000098,9000000099   REVIEW_OTP=123456   (set in server/.env, see scripts/seed-review.js)
+const REVIEW_PHONES = new Set((process.env.REVIEW_PHONES || '').split(',').map((s) => s.trim()).filter(Boolean));
+const REVIEW_OTP = (process.env.REVIEW_OTP || '').trim();
+const isReviewPhone = (phone) => REVIEW_OTP.length === 6 && REVIEW_PHONES.has(phone);
+
 app.post('/auth/send-otp', async (req, res) => {
   const phone = cleanPhone(req.body.phone);
   if (phone.replace(/\D/g, '').length < 10) return res.status(400).json({ error: 'Enter a valid phone number' });
   const limit = await infra.rate(`rl:otp:${phone}`, OTP_SEND_LIMIT, 15 * 60);
   if (!limit.ok) return res.status(429).json({ error: 'Too many codes requested for this number. Please try again in a few minutes.' });
-  const code = IS_DEV ? DEV_OTP : String(crypto.randomInt(100000, 1000000));
+  const review = isReviewPhone(phone);
+  const code = IS_DEV ? DEV_OTP : review ? REVIEW_OTP : String(crypto.randomInt(100000, 1000000));
   await infra.otp.put(phone, code, OTP_TTL_MS);
-  await infra.enqueueSms(phone, `Your DailyList code is ${code}. It expires in 5 minutes.`); // sent by the SMS queue
+  if (!review) await infra.enqueueSms(phone, `Your DailyList code is ${code}. It expires in 5 minutes.`); // sent by the SMS queue
   res.json({ ok: true, dev_hint: IS_DEV ? `Development mode: use code ${DEV_OTP}` : undefined });
 });
 
@@ -356,6 +363,34 @@ app.put('/auth/me', auth, (req, res) => {
   if (!name) return res.status(400).json({ error: 'Name cannot be empty' });
   db.prepare('UPDATE users SET name = ? WHERE id = ?').run(name.slice(0, 60), req.user.id);
   res.json({ user: publicUser(db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)) });
+});
+
+// Delete my account (Google Play requires this). The phone number, name, sessions, push addresses and notifications are removed.
+// Orders stay for the shop's records but show "Deleted user". A shop owner deleting the main account also closes the shop.
+app.delete('/auth/me', auth, (req, res) => {
+  const u = req.user;
+  db.transaction(() => {
+    const shop = u.role === 'owner' ? shopOf(u.id) : null;
+    const isPrimary = shop && db.prepare('SELECT is_primary FROM shop_members WHERE shop_id = ? AND user_id = ?').get(shop.id, u.id)?.is_primary;
+    const open = "('New','Accepted','Awaiting you','Preparing','Ready')";
+    if (isPrimary) {
+      // the shop goes away: orders still open are cancelled, customers are told, nobody can order again
+      db.prepare(`SELECT * FROM orders WHERE shop_id = ? AND status IN ${open}`).all(shop.id).forEach((o) => setStatus(o, 'Cancelled', 'shop', u.id, 'the shop closed its account'));
+      db.prepare("UPDATE shops SET approval = 'suspended', approval_note = 'Account deleted by the owner', accepting = 'closed' WHERE id = ?").run(shop.id);
+      db.prepare("UPDATE subscriptions SET status = 'cancelled' WHERE shop_id = ? AND status = 'active'").run(shop.id);
+    } else if (shop) {
+      db.prepare('DELETE FROM shop_members WHERE shop_id = ? AND user_id = ?').run(shop.id, u.id);
+    }
+    // the customer's own open orders are cancelled
+    db.prepare(`SELECT * FROM orders WHERE user_id = ? AND status IN ${open}`).all(u.id).forEach((o) => setStatus(o, 'Cancelled', 'customer', u.id, 'account deleted'));
+    db.prepare("UPDATE orders SET customer_name = 'Deleted user', phone = 'deleted' WHERE user_id = ?").run(u.id);
+    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(u.id);
+    db.prepare('DELETE FROM device_tokens WHERE user_id = ?').run(u.id);
+    db.prepare('DELETE FROM notifications WHERE user_id = ?').run(u.id);
+    db.prepare("UPDATE subscriptions SET status = 'cancelled' WHERE user_id = ? AND status = 'active'").run(u.id);
+    db.prepare("UPDATE users SET name = 'Deleted user', phone = ?, blocked = 1 WHERE id = ?").run('deleted-' + u.id, u.id);
+  })();
+  res.json({ ok: true });
 });
 
 app.post('/auth/logout', auth, (req, res) => {

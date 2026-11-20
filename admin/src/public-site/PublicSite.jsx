@@ -6,6 +6,7 @@ import Pricing from './Pricing.jsx';
 import Privacy from './Privacy.jsx';
 import Terms from './Terms.jsx';
 import { CartIcon, telHref } from './shared.jsx';
+import DeleteAccount from './DeleteAccount.jsx';
 
 const BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3000' : '');
 
@@ -84,6 +85,7 @@ function Footer({ info }) {
             <ul>
               <li><Link to="/privacy">Privacy Policy</Link></li>
               <li><Link to="/terms">Terms &amp; Conditions</Link></li>
+              <li><Link to="/delete-account">Delete your account</Link></li>
             </ul>
           </div>
           <div>
@@ -128,6 +130,7 @@ export default function PublicSite() {
           <Route index element={<Home info={info} />} />
           <Route path="pricing" element={<Pricing info={info} />} />
           <Route path="privacy" element={<Privacy info={info} />} />
+          <Route path="delete-account" element={<DeleteAccount info={info} />} />
           <Route path="terms" element={<Terms info={info} />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

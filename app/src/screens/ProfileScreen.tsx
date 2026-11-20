@@ -87,6 +87,18 @@ export default function ProfileScreen({navigation}: any) {
     if (ok) logout();
   };
 
+  const deleteAccount = async () => {
+    const ok = await dialog.confirm({
+      kind: 'danger', title: 'Delete your account?',
+      message: 'Your name, phone number and login are removed and your open orders are cancelled. This cannot be undone.' +
+        (isOwner ? ' If you are the main shop owner, your shop is closed too.' : ''),
+      confirmText: 'Delete account', cancelText: 'Keep it',
+    });
+    if (!ok) return;
+    try { await api('/auth/me', 'DELETE'); await logout(); }
+    catch (e: any) { dialog.alert({title: 'Could not delete the account', message: e.message, kind: 'error'}); }
+  };
+
   const openPage = async (path: '/terms' | '/privacy') => {
     try { await Linking.openURL((__DEV__ ? getBaseUrl() : 'https://dailylist.yashrajsinhjadeja.com') + path); }
     catch { dialog.alert({title: 'Could not open the page', message: 'Please try again later.', kind: 'error'}); }
@@ -181,7 +193,8 @@ export default function ProfileScreen({navigation}: any) {
         </View>
 
         <View style={s.group}>
-          <Row icon="log-out" label="Log out" danger onPress={confirmLogout} last />
+          <Row icon="log-out" label="Log out" danger onPress={confirmLogout} />
+          <Row icon="trash" label="Delete my account" danger onPress={deleteAccount} last />
         </View>
         <Text style={s.version}>DailyList</Text>
       </View>
