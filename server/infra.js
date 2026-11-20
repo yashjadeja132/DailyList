@@ -17,7 +17,7 @@ const { Queue, Worker } = require('bullmq');
 const REDIS_URL = process.env.REDIS_URL === undefined ? 'redis://127.0.0.1:6379' : process.env.REDIS_URL;
 const REDIS_OFF = !REDIS_URL || REDIS_URL.toLowerCase() === 'off';
 // Lets two servers share one Redis without sharing queues or codes (used by the tests).
-const PREFIX = process.env.QUEUE_PREFIX || 'shop';
+const PREFIX = process.env.QUEUE_PREFIX || 'dailylist';
 
 // ---- sending SMS. Plug a real provider in here (MSG91, Twilio, ...).
 const deliverSms = async (phone, text) => {

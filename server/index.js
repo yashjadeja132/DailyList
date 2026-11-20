@@ -726,7 +726,7 @@ app.use((req, res, next) => {
 });
 
 infra.init({ db, expireOrders }).then(() => {
-  app.listen(PORT, '0.0.0.0', () => console.log(`Shop server on port ${PORT} (storage: ${infra.mode})`));
+  app.listen(PORT, process.env.HOST || '0.0.0.0', () => console.log(`Shop server on port ${PORT} (storage: ${infra.mode})`));
 });
 
 for (const sig of ['SIGINT', 'SIGTERM']) {
