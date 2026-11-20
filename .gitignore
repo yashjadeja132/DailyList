@@ -1,0 +1,33 @@
+# private settings and keys: never publish these
+.env
+server/.env
+server/secrets/
+**/google-services.json
+**/*.jks
+**/release.keystore
+local.properties
+
+# databases and logs
+*.db
+*.db-shm
+*.db-wal
+*.log
+server.err
+metro.log
+
+# dependencies and build output
+node_modules/
+admin/dist/
+app/android/build/
+app/android/app/build/
+app/android/.gradle/
+app/android/.cxx/
+app/android/app/.cxx/
+.gradle/
+.shots/
+*.apk
+*.aab
+
+# temporary test helpers
+app/ui.sh
+app/ui.xml
