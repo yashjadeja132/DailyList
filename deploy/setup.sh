@@ -19,7 +19,6 @@ fi
 # the code
 if [ -d "$APP/.git" ]; then git -C "$APP" pull; else git clone https://github.com/yashjadeja132/DailyList.git "$APP"; fi
 (cd "$APP/server" && npm ci --omit=dev)
-(cd "$APP/admin" && npm ci && npm run build)
 
 # private files (not in the repository): fill these in before starting
 mkdir -p "$APP/server/secrets"

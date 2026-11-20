@@ -88,7 +88,7 @@ export default function ProfileScreen({navigation}: any) {
   };
 
   const openPage = async (path: '/terms' | '/privacy') => {
-    try { await Linking.openURL(getBaseUrl() + path); }
+    try { await Linking.openURL((__DEV__ ? getBaseUrl() : 'https://dailylist.yashrajsinhjadeja.com') + path); }
     catch { dialog.alert({title: 'Could not open the page', message: 'Please try again later.', kind: 'error'}); }
   };
 

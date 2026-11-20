@@ -1,5 +1,5 @@
-# Publishes the DailyList website (home, privacy, terms) to GitHub Pages at dailylist.yashrajsinhjadeja.com.
-# The shop server and the admin panel are not part of this: they need a real server.
+# Publishes the DailyList website and admin panel (/panel) to GitHub Pages at dailylist.yashrajsinhjadeja.com.
+# They talk to the API at dailylist-api.yashrajsinhjadeja.com. The API itself runs on your own server.
 name: Deploy website
 
 on:
@@ -32,9 +32,8 @@ jobs:
       - run: npm run build
         working-directory: admin
         env:
-          VITE_SITE_ONLY: 'true'
-          # address of the shop server (for download links and plans), set it as a repository variable when the server is online
-          VITE_API_URL: ${{ vars.API_URL }}
+          # address of the API server; override it with a repository variable named API_URL if it ever moves
+          VITE_API_URL: ${{ vars.API_URL || 'https://dailylist-api.yashrajsinhjadeja.com' }}
           # shown on the website when there is no server to ask
           VITE_PLAY_STORE_URL: https://play.google.com/store/apps/details?id=com.dailylist
           VITE_SUPPORT_EMAIL: yashrajsinhjadeja757@gmail.com

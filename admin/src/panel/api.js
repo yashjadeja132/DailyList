@@ -1,6 +1,6 @@
 // Talks to the shop server. When the panel is served by the server itself the address is "".
 // While developing with `npm run dev`, the server runs on port 3000.
-const BASE = import.meta.env.DEV ? 'http://localhost:3000' : '';
+const BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3000' : '');
 const KEY = 'admin_token';
 
 export const getToken = () => localStorage.getItem(KEY) || '';
