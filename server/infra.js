@@ -19,10 +19,8 @@ const REDIS_OFF = !REDIS_URL || REDIS_URL.toLowerCase() === 'off';
 // Lets two servers share one Redis without sharing queues or codes (used by the tests).
 const PREFIX = process.env.QUEUE_PREFIX || 'dailylist';
 
-// ---- sending SMS. Plug a real provider in here (MSG91, Twilio, ...).
-const deliverSms = async (phone, text) => {
-  console.log(`[SMS stub] to ${phone}: ${text}`);
-};
+// ---- sending SMS: see services/sms (Twilio, or only a log line when it is not set up)
+const deliverSms = (phone, text) => require('./services/sms').send(phone, text);
 
 // ---- repeating job: plans whose end date has passed are marked as expired
 function expireSubscriptions(db) {

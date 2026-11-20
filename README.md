@@ -141,3 +141,10 @@ These private files are not in the repository. Add them yourself:
 
 Then: `cd server && npm install && node index.js`, `cd admin && npm install && npm run build`, `cd app && npm install`, and
 `npx react-native start` with `cd android && ./gradlew installDebug` for the phone app.
+
+## SMS (login codes) with Twilio
+
+Code: `server/services/sms/` (`twilio.js` talks to Twilio, `index.js` chooses Twilio or only a log line). Set these in `server/.env`:
+`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_FROM` (your Twilio number) or `TWILIO_MESSAGING_SERVICE_SID`.
+Numbers saved without a country code get `SMS_COUNTRY_CODE` (default +91). A Twilio trial account can only send to numbers
+you have verified in the Twilio console, and sending to India needs the sender and message registered (DLT).
