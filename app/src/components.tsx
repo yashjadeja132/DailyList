@@ -152,7 +152,7 @@ export const when = (iso: string) => {
 
 const s = StyleSheet.create({
   screen: {flex: 1, backgroundColor: colors.bg},
-  header: {flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14},
+  header: {flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 4, paddingBottom: 8},
   headerTitle: {fontSize: 18, fontWeight: '800', color: colors.text},
   headerSub: {fontSize: 12, color: colors.muted, marginTop: 2},
   btn: {
