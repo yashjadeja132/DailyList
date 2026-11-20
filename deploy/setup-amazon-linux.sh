@@ -13,11 +13,11 @@ echo ">>> tools"
 dnf install -y gcc-c++ make python3 git nginx
 
 echo ">>> Node 22"
-if ! command -v node >/dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 22 ]; then
-  curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
-  dnf install -y nodejs
-fi
+# Amazon Linux ships its own Node packages. Install 22 and make it the default (the old 18 stays installed but is not used).
+dnf install -y nodejs22 nodejs22-npm
+alternatives --set node /usr/bin/node-22
 node -v
+[ "$(node -v | cut -d. -f1 | tr -d v)" -ge 22 ] || { echo "Node 22 is not the default, stopping."; exit 1; }
 
 echo ">>> packages for the server"
 sudo -u "$APP_USER" bash -c "cd '$APP_DIR/server' && rm -rf node_modules && npm ci --omit=dev"
@@ -49,8 +49,8 @@ UNIT
 systemctl daemon-reload
 systemctl enable dailylist-api
 systemctl restart dailylist-api
-sleep 4
-curl -fsS http://127.0.0.1:3000/health && echo " <- API is running"
+for i in $(seq 1 30); do curl -fsS http://127.0.0.1:3000/health >/dev/null 2>&1 && break; sleep 2; done
+curl -fsS http://127.0.0.1:3000/health && echo " <- API is running" || { echo "The API did not start. See: sudo journalctl -u dailylist-api -n 40"; exit 1; }
 
 echo ">>> nginx"
 cp "$APP_DIR/deploy/nginx-dailylist-api.conf" /etc/nginx/conf.d/dailylist-api.conf
