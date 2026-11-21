@@ -18,6 +18,8 @@ const timeAgo = (t: string) => {
   return h < 24 ? `${h} h ago` : `${Math.floor(h / 24)} d ago`;
 };
 
+const TABS = [['open', 'Accepting', colors.primary], ['busy', 'Busy', colors.amber], ['closed', 'Paused', colors.danger]] as const;
+
 const greeting = () => {
   const h = new Date().getHours();
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
@@ -52,6 +54,10 @@ export default function OwnerHomeScreen({navigation}: any) {
   const fresh = all.filter(o => o.status === 'New' || o.status === 'Accepted');
   const ready = all.filter(o => o.status === 'Ready');
   const done = all.filter(o => o.status === 'Picked up');
+  const preparing = all.filter(o => o.status === 'Preparing');
+  const onHold = all.filter(o => o.status === 'Awaiting you');
+  const mode: ShopState = (shop?.accepting || 'open') as ShopState;
+  const shown = mode === 'open' ? fresh : mode === 'busy' ? preparing : onHold;
   const inProgress = all.filter(o => ['Accepted', 'Awaiting you', 'Preparing'].includes(o.status));
   const today = new Date().toISOString().slice(0, 10);
   const todayCount = all.filter(o => o.created_at.startsWith(today)).length;
@@ -119,36 +125,31 @@ export default function OwnerHomeScreen({navigation}: any) {
             </View>
           ) : null}
 
-          {/* 1. order acceptance control: is the shop taking new orders? (accepting / busy / paused) */}
+          {/* order acceptance control + the orders for the chosen state */}
           <View style={s.accepting}>
-            <Text style={s.acceptingTitle}>Accepting orders</Text>
+            <Text style={s.acceptingTitle}>Orders</Text>
             <View style={s.seg}>
-              {([['open', 'Accepting', colors.primary], ['busy', 'Busy', colors.amber], ['closed', 'Paused', colors.danger]] as const).map(([k, label, c]) => {
-                const on = (shop?.accepting || 'open') === k;
+              {TABS.map(([k, label, c]) => {
+                const on = mode === k;
+                const n = (k === 'open' ? fresh : k === 'busy' ? preparing : onHold).length;
                 return (
                   <Pressable key={k} onPress={() => setAccepting(k)} style={[s.segItem, on && {backgroundColor: c}]}>
-                    <Text style={[s.segText, on && {color: '#fff'}]}>{label}</Text>
+                    <Text style={[s.segText, on && {color: '#fff'}]}>{label}{n ? ` (${n})` : ''}</Text>
                   </Pressable>
                 );
               })}
             </View>
             <Text style={s.acceptingHint}>
-              {(shop?.accepting || 'open') === 'open' ? 'Customers can send you lists.'
-                : shop?.accepting === 'busy' ? 'Customers can still send lists but see that replies may be slow.'
-                : 'Customers cannot send new lists until you accept orders again.'}
+              {mode === 'open' ? 'Taking new orders. These are the orders you are accepting now.'
+                : mode === 'busy' ? 'Busy: customers can still send lists but see that replies may be slow. These orders are being prepared.'
+                : 'Paused: customers cannot send new lists. These orders are on hold, waiting for the customer.'}
             </Text>
-          </View>
 
-          {/* 2. new order inbox: received time, customer note and item count */}
-          <View style={s.accepting}>
-            <View style={s.newHeadTop}>
-              <Text style={s.acceptingTitle}>New orders</Text>
-              <Text style={s.newCount}>{fresh.length}</Text>
-            </View>
-            {fresh.length === 0 ? (
-              <Text style={s.newEmpty}>No new orders right now. New requests will appear here.</Text>
-            ) : fresh.slice(0, 4).map((o, i) => (
-              <Pressable key={o.id} onPress={() => navigation.navigate('Queue', {filter: 'New', at: Date.now()})} style={[s.newRow, i > 0 && s.newRowBorder]}>
+            {shown.length === 0 ? (
+              <Text style={s.newEmpty}>{mode === 'open' ? 'No orders to accept right now. New requests will appear here.'
+                : mode === 'busy' ? 'No orders are being prepared right now.' : 'No orders on hold.'}</Text>
+            ) : shown.slice(0, 4).map((o, i) => (
+              <Pressable key={o.id} onPress={() => navigation.navigate('Queue', {filter: mode === 'open' ? 'New' : 'In progress', at: Date.now()})} style={[s.newRow, i > 0 && s.newRowBorder]}>
                 <Avatar name={o.customer_name} size={38} />
                 <View style={{flex: 1}}>
                   <View style={s.newLine}>
@@ -160,13 +161,15 @@ export default function OwnerHomeScreen({navigation}: any) {
                   </Text>
                   {o.note ? <Text style={s.newNote} numberOfLines={1}>“{o.note}”</Text> : null}
                 </View>
-                <View style={[s.newPill, o.status === 'Accepted' && {backgroundColor: '#fef3c7'}]}>
-                  <Text style={[s.newPillText, o.status === 'Accepted' && {color: '#92400e'}]}>{o.status === 'Accepted' ? 'Checking' : 'New'}</Text>
+                <View style={[s.newPill, o.status === 'Accepted' && {backgroundColor: '#fef3c7'}, o.status === 'Preparing' && {backgroundColor: '#fef3c7'}, o.status === 'Awaiting you' && {backgroundColor: '#fee2e2'}]}>
+                  <Text style={[s.newPillText, (o.status === 'Accepted' || o.status === 'Preparing') && {color: '#92400e'}, o.status === 'Awaiting you' && {color: '#991b1b'}]}>
+                    {o.status === 'Accepted' ? 'Checking' : o.status === 'Awaiting you' ? 'Waiting' : o.status}
+                  </Text>
                 </View>
               </Pressable>
             ))}
-            {fresh.length > 4 ? (
-              <Pressable onPress={() => navigation.navigate('Queue', {filter: 'New', at: Date.now()})}><Text style={s.newMore}>See all {fresh.length} orders</Text></Pressable>
+            {shown.length > 4 ? (
+              <Pressable onPress={() => navigation.navigate('Queue', {filter: mode === 'open' ? 'New' : 'In progress', at: Date.now()})}><Text style={s.newMore}>See all {shown.length} orders</Text></Pressable>
             ) : null}
           </View>
 
