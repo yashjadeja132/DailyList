@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {ActivityIndicator, Linking, Pressable, StyleSheet, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {WebView} from 'react-native-webview';
@@ -18,7 +18,7 @@ const UPI_APP = /^(upi|intent|phonepe|tez|gpay|paytmmp|bhim|credpay|whatsapp):/i
  */
 export default function PaymentScreen({route, navigation}: any) {
   const {order_id, payment_session_id, environment, plan_name, amount} = route.params;
-  const {refreshAccount} = useAuth();
+  const {refreshAccount, user} = useAuth();
   const dialog = useDialog();
   const [checking, setChecking] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -30,15 +30,38 @@ export default function PaymentScreen({route, navigation}: any) {
 c.checkout({paymentSessionId:${JSON.stringify(payment_session_id)},redirectTarget:"_self"});};</script></body></html>`,
   [environment, payment_session_id]);
 
+  // Do not depend on the checkout redirecting back: while this screen is open, quietly ask the
+  // server every few seconds, and finish as soon as the payment is paid.
+  const finished = useRef(false);
+  useEffect(() => {
+    const t = setInterval(async () => {
+      if (finished.current) return;
+      try {
+        const r = await api<{status: 'paid' | 'pending' | 'failed'}>('/subscription/confirm', 'POST', {order_id});
+        if (r.status === 'paid' && !finished.current) { finished.current = true; await done(); }
+      } catch {}
+    }, 4000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const done = async () => {
+    finished.current = true;
+    await refreshAccount().catch(() => {});
+    await dialog.alert({kind: 'success', title: 'Payment successful', message: `${plan_name} is now active.`, confirmText: 'Done'});
+    // A new shop owner opened this screen as the first screen (no plan yet), so there is nothing to go
+    // back to: after paying, go to the home screen.
+    if (navigation.canGoBack()) navigation.goBack();
+    else navigation.reset({index: 0, routes: [{name: user?.role === 'owner' ? 'OwnerHome' : 'CustomerTabs'}]});
+  };
+
   const confirm = async () => {
     if (checking) return;
     setChecking(true);
     try {
       const r = await api<{status: 'paid' | 'pending' | 'failed'}>('/subscription/confirm', 'POST', {order_id});
       if (r.status === 'paid') {
-        await refreshAccount().catch(() => {});
-        await dialog.alert({kind: 'success', title: 'Payment successful', message: `${plan_name} is now active.`, confirmText: 'Done'});
-        if (navigation.canGoBack()) navigation.goBack();
+        if (!finished.current) await done();
       } else if (r.status === 'pending') {
         dialog.alert({kind: 'info', title: 'Payment is processing', message: 'We have not received the payment yet. Wait a moment and tap "Check payment" again.'});
       } else {
