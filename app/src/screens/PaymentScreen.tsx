@@ -65,6 +65,9 @@ c.checkout({paymentSessionId:${JSON.stringify(payment_session_id)},redirectTarge
           originWhitelist={['*']}
           javaScriptEnabled domStorageEnabled setSupportMultipleWindows={false}
           onLoadEnd={() => setLoading(false)}
+          // Android does not always report a server redirect to onShouldStartLoadWithRequest,
+          // so also watch the page address itself and confirm as soon as the return page opens
+          onNavigationStateChange={nav => { if (nav.url?.includes('/pay/return')) confirm(); }}
           onShouldStartLoadWithRequest={req => {
             if (req.url.includes('/pay/return')) { confirm(); return false; } // the checkout finished
             if (UPI_APP.test(req.url)) { // open the UPI app (GPay, PhonePe, ...)

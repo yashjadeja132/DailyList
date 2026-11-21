@@ -31,7 +31,7 @@ function expireSubscriptions(db) {
 // ---- repeating job: tell shop owners 3 days before their plan ends (once per plan)
 async function sendPlanReminders(db, enqueueSms) {
   const due = db.prepare(`
-    SELECT s.id, s.expires_at, p.name AS plan_name, sh.name AS shop_name, u.phone
+    SELECT s.id, s.expires_at, p.name AS plan_name, sh.name AS shop_name, u.id AS user_id
     FROM subscriptions s
     JOIN plans p ON p.id = s.plan_id
     JOIN shops sh ON sh.id = s.shop_id
@@ -42,7 +42,9 @@ async function sendPlanReminders(db, enqueueSms) {
   const mark = db.prepare("UPDATE subscriptions SET reminded_at = datetime('now') WHERE id = ?");
   for (const r of due) {
     const date = new Date(r.expires_at.replace(' ', 'T') + 'Z').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-    await enqueueSms(r.phone, `DailyList: your ${r.plan_name} plan for ${r.shop_name} ends on ${date}. Open the app to renew.`);
+    // in-app notification only (no SMS: SMS is for the login code only)
+    db.prepare('INSERT INTO notifications (user_id, order_id, title, body) VALUES (?, NULL, ?, ?)')
+      .run(r.user_id, 'Plan ending soon', `Your ${r.plan_name} plan for ${r.shop_name} ends on ${date}. Open the app to renew.`);
     mark.run(r.id);
   }
   return due.length;

@@ -135,14 +135,12 @@ db.exec(`CREATE TABLE IF NOT EXISTS order_requests (
 const logEvent = (orderId, actor, userId, event, detail = '') =>
   db.prepare('INSERT INTO order_events (order_id, actor, user_id, event, detail) VALUES (?, ?, ?, ?, ?)').run(orderId, actor, userId || null, event, detail);
 push.init(db);
-// In-app notifications; critical ones are also sent as an SMS (the SMS queue is a stub until a provider is set up).
-const notify = (userId, title, body, orderId, sms = false) => {
+// In-app notifications and push messages. SMS is used only for the login code (OTP), never for orders.
+// The last parameter is kept so existing callers still work, it does nothing.
+// eslint-disable-next-line no-unused-vars
+const notify = (userId, title, body, orderId, _sms = false) => {
   db.prepare('INSERT INTO notifications (user_id, order_id, title, body) VALUES (?, ?, ?, ?)').run(userId, orderId || null, title, body);
   push.send(db, userId, title, body, { order_id: orderId || '' });
-  if (sms) {
-    const u = db.prepare('SELECT phone FROM users WHERE id = ?').get(userId);
-    if (u && infra.enqueueSms) infra.enqueueSms(u.phone, 'DailyList: ' + title + (body ? '. ' + body : '')).catch(() => {});
-  }
 };
 const notifyShop = (shopId, title, body, orderId, sms = false) =>
   db.prepare('SELECT user_id FROM shop_members WHERE shop_id = ?').all(shopId).forEach((m) => notify(m.user_id, title, body, orderId, sms));
