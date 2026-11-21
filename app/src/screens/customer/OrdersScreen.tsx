@@ -11,6 +11,7 @@ import ReportProblem from '../ReportProblem';
 import {colors} from '../../theme';
 
 export default function OrdersScreen({navigation}: any) {
+  const clearance = useTabClearance();
   const dialog = useDialog();
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [error, setError] = useState('');
@@ -80,7 +81,7 @@ export default function OrdersScreen({navigation}: any) {
         </View>}
           data={orders || error ? list : []}
           keyExtractor={o => String(o.id)}
-          contentContainerStyle={{padding: 16, paddingTop: 6, gap: 14, paddingBottom: 100}}
+          contentContainerStyle={{padding: 16, paddingTop: 6, gap: 14, paddingBottom: clearance}}
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} colors={[colors.primary]}
             onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false); }} />}
@@ -128,6 +129,7 @@ export default function OrdersScreen({navigation}: any) {
   );
 }
 
+import {useTabClearance} from '../../ui';
 const s = StyleSheet.create({
   rate: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
   rateText: {color: colors.muted, fontWeight: '700'},

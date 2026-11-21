@@ -13,6 +13,7 @@ import OrderCard from '../OrderCard';
 import ReportProblem from '../ReportProblem';
 import {colors} from '../../theme';
 
+import {useTabClearance} from '../../ui';
 const FILTERS = ['New', 'In progress', 'Ready', 'Done'] as const;
 type Filter = typeof FILTERS[number];
 const GROUP: Record<Filter, string[]> = {
@@ -25,6 +26,7 @@ const GROUP: Record<Filter, string[]> = {
 const REASONS = ['Out of stock', 'Shop is closing', 'Too busy right now', 'Cannot prepare this order'];
 
 export default function OwnerOrdersScreen({route}: any) {
+  const clearance = useTabClearance();
   const {shop} = useAuth();
   const dialog = useDialog();
   const [orders, setOrders] = useState<Order[] | null>(null);
@@ -130,7 +132,7 @@ export default function OwnerOrdersScreen({route}: any) {
         </View>}
           data={orders || error ? shown : []}
           keyExtractor={o => String(o.id)}
-          contentContainerStyle={{padding: 16, paddingTop: 6, gap: 12, paddingBottom: 100}}
+          contentContainerStyle={{padding: 16, paddingTop: 6, gap: 12, paddingBottom: clearance}}
           refreshControl={<RefreshControl refreshing={refreshing} colors={[colors.primary]}
             onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false); }} />}
           ListEmptyComponent={!orders && !error ? <ActivityIndicator style={{marginTop: 60}} color={colors.primary} size="large" /> : error ? <Empty icon="cloud-offline" title="Can't load orders" text={error} /> :

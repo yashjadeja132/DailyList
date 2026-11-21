@@ -159,3 +159,14 @@ const h = StyleSheet.create({
   stepDot: {width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary},
   stepLabel: {fontSize: 11, color: colors.muted, fontWeight: '600', marginTop: 6},
 });
+
+
+/**
+ * Bottom space a scrolling tab screen needs so its last card clears the floating tab bar.
+ * It follows the device: the bar sits `max(system inset, 8) + 16` above the bottom edge and is 48 tall.
+ * (A fixed number is too small on some phones and too big on others.)
+ */
+export function useTabClearance() {
+  const {bottom} = useSafeAreaInsets();
+  return Math.max(bottom, 8) + 16 + 48 + 24;
+}

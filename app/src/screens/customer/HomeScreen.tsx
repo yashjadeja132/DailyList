@@ -3,7 +3,7 @@ import {ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Te
 import {useFocusEffect} from '@react-navigation/native';
 import {Button, Card, IconText, SectionHeader, when} from '../../components';
 import Icon from '../../Icon';
-import {Avatar, distanceText, FocusStatusBar, Bell, Hero, ShopStatusTag, StatusPill, Tracker} from '../../ui';
+import {Avatar, distanceText, FocusStatusBar, Bell, Hero, ShopStatusTag, StatusPill, Tracker, useTabClearance} from '../../ui';
 import {useUnread} from '../../notifications';
 import {api, isActiveOrder, Order, Shop} from '../../api';
 import {useAuth} from '../../AuthContext';
@@ -16,6 +16,7 @@ const greeting = () => {
 };
 
 export default function HomeScreen({navigation}: any) {
+  const clearance = useTabClearance();
   const {user} = useAuth();
   const [shops, setShops] = useState<Shop[] | null>(null);
   const [orders, setOrders] = useState<Order[] | null>(null);
@@ -81,7 +82,7 @@ export default function HomeScreen({navigation}: any) {
           </Pressable>
         </View>
       </Hero>
-        <View style={s.body}>
+        <View style={[s.body, {paddingBottom: clearance}]}>
         {!orders && !error ? <ActivityIndicator style={{marginTop: 60}} color={colors.primary} size="large" /> : (<>
 
           {error ? <Card style={s.errorCard}><IconText icon="cloud-offline" color={colors.danger}>{error}</IconText></Card> : null}
@@ -190,7 +191,7 @@ const s = StyleSheet.create({
   hello: {color: '#BDE6E1', fontSize: 13, fontWeight: '600'},
   name: {color: '#fff', fontSize: 18, fontWeight: '800'},
   heroAvatar: {borderWidth: 2.5, borderColor: '#ffffff55'},
-  body: {padding: 16, paddingBottom: 100, marginTop: -28},
+  body: {padding: 16, marginTop: -28},
   errorCard: {backgroundColor: '#fee2e2', marginBottom: 12},
   muted: {color: colors.muted, fontSize: 12},
   focus: {backgroundColor: '#fff', borderRadius: 20, padding: 16, gap: 14, ...shadowLift},

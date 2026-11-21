@@ -3,7 +3,7 @@ import {KeyboardAvoidingView, Linking, Modal, Pressable, ScrollView, StyleSheet,
 import {useFocusEffect} from '@react-navigation/native';
 import {Button, Chip, Field} from '../components';
 import Icon, {IconName} from '../Icon';
-import {Avatar, FocusStatusBar, Hero} from '../ui';
+import {Avatar, FocusStatusBar, Hero, useTabClearance} from '../ui';
 import {useAuth} from '../AuthContext';
 import {useDialog} from '../dialog';
 import {api, getBaseUrl, Order, Shop, User} from '../api';
@@ -39,6 +39,7 @@ function Row({icon, label, value, onPress, danger, last}: {
 }
 
 export default function ProfileScreen({navigation}: any) {
+  const clearance = useTabClearance();
   const {user, shop, account, refreshAccount, setShop, setUser, logout} = useAuth();
   const dialog = useDialog();
   const [edit, setEdit] = useState<Edit | null>(null);
@@ -116,7 +117,7 @@ export default function ProfileScreen({navigation}: any) {
   return (
     <View style={s.screen}>
       <FocusStatusBar style="light-content" />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: clearance}}>
       <Hero style={{paddingBottom: 66}}>
         <View style={s.who}>
           <Avatar name={user.name} size={84} round style={s.bigAvatar} />
@@ -131,7 +132,7 @@ export default function ProfileScreen({navigation}: any) {
           </View>
         </View>
       </Hero>
-      <View style={s.body}>
+      <View style={[s.body, {paddingBottom: clearance}]}>
         {/* plan */}
         {sub && plan ? (
           <View style={s.plan}>

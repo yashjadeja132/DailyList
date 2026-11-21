@@ -3,7 +3,7 @@ import {ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Te
 import {useFocusEffect} from '@react-navigation/native';
 import {Button, Card, IconText, SectionHeader, when} from '../../components';
 import Icon from '../../Icon';
-import {Avatar, Bell, FocusStatusBar, Hero} from '../../ui';
+import {Avatar, Bell, FocusStatusBar, Hero, useTabClearance} from '../../ui';
 import {useUnread} from '../../notifications';
 import {api, Order, ShopState} from '../../api';
 import {useAuth} from '../../AuthContext';
@@ -26,6 +26,7 @@ const greeting = () => {
 };
 
 export default function OwnerHomeScreen({navigation}: any) {
+  const clearance = useTabClearance();
   const {user, shop, account, setShop} = useAuth();
   const [switching, setSwitching] = useState(false);
   const {unread} = useUnread();
@@ -87,7 +88,7 @@ export default function OwnerHomeScreen({navigation}: any) {
           </Pressable>
         </View>
       </Hero>
-        <View style={s.body}>
+        <View style={[s.body, {paddingBottom: clearance}]}>
         {!orders && !error ? <ActivityIndicator style={{marginTop: 60}} color={colors.primary} size="large" /> : (<>
           {error ? <Card style={{backgroundColor: '#fee2e2', marginBottom: 12}}><IconText icon="cloud-offline" color={colors.danger}>{error}</IconText></Card> : null}
 
@@ -134,7 +135,7 @@ export default function OwnerHomeScreen({navigation}: any) {
                 const n = (k === 'open' ? fresh : k === 'busy' ? preparing : onHold).length;
                 return (
                   <Pressable key={k} onPress={() => setAccepting(k)} style={[s.segItem, on && {backgroundColor: c}]}>
-                    <Text style={[s.segText, on && {color: '#fff'}]}>{label}{n ? ` (${n})` : ''}</Text>
+                    <Text style={[s.segText, on && {color: '#fff'}]} numberOfLines={1} maxFontSizeMultiplier={1.1}>{label}{n ? ` (${n})` : ''}</Text>
                   </Pressable>
                 );
               })}
@@ -199,7 +200,7 @@ const s = StyleSheet.create({
   shopRow: {flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3},
   shopName: {color: '#DDF2EF', fontSize: 13, fontWeight: '700', flexShrink: 1},
   heroAvatar: {borderWidth: 2.5, borderColor: '#ffffff55'},
-  body: {padding: 16, paddingBottom: 100, marginTop: -28},
+  body: {padding: 16, marginTop: -28},
   muted: {color: colors.muted, fontSize: 12},
   focus: {backgroundColor: '#fff', borderRadius: 20, padding: 16, ...shadowLift},
   focusRow: {flexDirection: 'row', alignItems: 'center', gap: 14},

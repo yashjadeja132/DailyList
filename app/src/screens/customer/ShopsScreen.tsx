@@ -5,13 +5,14 @@ import {
 import {useFocusEffect} from '@react-navigation/native';
 import {Empty, IconText, Page, PageHeader} from '../../components';
 import Icon from '../../Icon';
-import {Avatar, distanceText, ShopStatusTag} from '../../ui';
+import {Avatar, distanceText, ShopStatusTag, useTabClearance} from '../../ui';
 import {api, Shop} from '../../api';
 import AreaSearch from '../../AreaSearch';
 import {Coords, getBestLocation, getManualLabel, setManualLocation} from '../../location';
 import {colors} from '../../theme';
 
 export default function ShopsScreen({navigation}: any) {
+  const clearance = useTabClearance();
   const [shops, setShops] = useState<Shop[] | null>(null);
   const [nearbyKm, setNearbyKm] = useState(5);
   const [locOff, setLocOff] = useState('');
@@ -76,7 +77,7 @@ export default function ShopsScreen({navigation}: any) {
         </View>}
           sections={shops || error ? sections : []}
           keyExtractor={sh => String(sh.id)}
-          contentContainerStyle={{padding: 16, paddingTop: 4, paddingBottom: 100}}
+          contentContainerStyle={{padding: 16, paddingTop: 4, paddingBottom: clearance}}
           stickySectionHeadersEnabled={false}
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} colors={[colors.primary]}
