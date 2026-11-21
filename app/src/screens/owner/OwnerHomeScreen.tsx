@@ -39,7 +39,8 @@ export default function OwnerHomeScreen({navigation}: any) {
   }, [load]));
 
   const all = orders || [];
-  const fresh = all.filter(o => o.status === 'New');
+  // orders waiting for the shop's check (not started, or started and not finished)
+  const fresh = all.filter(o => o.status === 'New' || o.status === 'Accepted');
   const ready = all.filter(o => o.status === 'Ready');
   const done = all.filter(o => o.status === 'Picked up');
   const inProgress = all.filter(o => ['Accepted', 'Awaiting you', 'Preparing'].includes(o.status));

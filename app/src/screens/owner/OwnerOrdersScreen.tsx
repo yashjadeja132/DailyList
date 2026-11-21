@@ -16,8 +16,9 @@ import {colors} from '../../theme';
 const FILTERS = ['New', 'In progress', 'Ready', 'Done'] as const;
 type Filter = typeof FILTERS[number];
 const GROUP: Record<Filter, string[]> = {
-  New: ['New'],
-  'In progress': ['Accepted', 'Awaiting you', 'Preparing'],
+  // "Accepted" means the shop has started checking the list, so it stays under New until the check is finished
+  New: ['New', 'Accepted'],
+  'In progress': ['Awaiting you', 'Preparing'],
   Ready: ['Ready'],
   Done: ['Picked up', 'Cancelled', 'Declined', 'Expired'],
 };
