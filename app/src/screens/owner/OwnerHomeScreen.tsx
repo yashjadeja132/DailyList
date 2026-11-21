@@ -87,7 +87,7 @@ export default function OwnerHomeScreen({navigation}: any) {
                     <Text style={s.muted}>Check each list and mark what you don't have.</Text>
                   </View>
                 </View>
-                <Button title="Review orders" icon="list" onPress={() => navigation.navigate('Queue')} style={{marginTop: 14}} />
+                <Button title="Review orders" icon="list" onPress={() => navigation.navigate('Queue', {filter: 'New', at: Date.now()})} style={{marginTop: 14}} />
               </>
             ) : (
               <View style={s.focusRow}>
@@ -128,6 +128,31 @@ export default function OwnerHomeScreen({navigation}: any) {
                 : shop?.accepting === 'busy' ? 'Customers can still send lists but see that replies may be slow.'
                 : 'Customers cannot send new lists until you accept orders again.'}
             </Text>
+
+            {/* the new orders themselves */}
+            <View style={s.newHead}>
+              <Text style={s.newTitle}>Waiting for you</Text>
+              <Text style={s.newCount}>{fresh.length}</Text>
+            </View>
+            {fresh.length === 0 ? (
+              <Text style={s.newEmpty}>No new orders right now.</Text>
+            ) : fresh.slice(0, 4).map((o, i) => (
+              <Pressable key={o.id} onPress={() => navigation.navigate('Queue', {filter: 'New', at: Date.now()})} style={[s.newRow, i > 0 && s.newRowBorder]}>
+                <Avatar name={o.customer_name} size={38} />
+                <View style={{flex: 1}}>
+                  <Text style={s.newName} numberOfLines={1}>{o.customer_name}</Text>
+                  <Text style={s.newMeta} numberOfLines={1}>
+                    {o.items.length} item{o.items.length > 1 ? 's' : ''} · {o.items.slice(0, 3).map(x => x.name).join(', ')}{o.items.length > 3 ? '…' : ''}
+                  </Text>
+                </View>
+                <View style={[s.newPill, o.status === 'Accepted' && {backgroundColor: '#fef3c7'}]}>
+                  <Text style={[s.newPillText, o.status === 'Accepted' && {color: '#92400e'}]}>{o.status === 'Accepted' ? 'Checking' : 'New'}</Text>
+                </View>
+              </Pressable>
+            ))}
+            {fresh.length > 4 ? (
+              <Pressable onPress={() => navigation.navigate('Queue', {filter: 'New', at: Date.now()})}><Text style={s.newMore}>See all {fresh.length} orders</Text></Pressable>
+            ) : null}
           </View>
 
           {expiring ? (
@@ -168,6 +193,17 @@ const s = StyleSheet.create({
   segItem: {flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 10},
   segText: {fontWeight: '800', color: colors.muted, fontSize: 12},
   acceptingHint: {color: colors.muted, fontSize: 12},
+  newHead: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderColor: colors.border},
+  newTitle: {fontWeight: '800', color: colors.text, fontSize: 13},
+  newCount: {fontWeight: '800', color: colors.primaryDark, fontSize: 12, backgroundColor: colors.primarySoft, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 2, overflow: 'hidden'},
+  newEmpty: {color: colors.muted, fontSize: 12},
+  newRow: {flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8},
+  newRowBorder: {borderTopWidth: StyleSheet.hairlineWidth, borderColor: colors.border},
+  newName: {fontWeight: '700', color: colors.text, fontSize: 13},
+  newMeta: {color: colors.muted, fontSize: 12, marginTop: 1},
+  newPill: {backgroundColor: colors.primarySoft, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4},
+  newPillText: {color: colors.primaryDark, fontWeight: '800', fontSize: 11},
+  newMore: {color: colors.primary, fontWeight: '700', fontSize: 12, textAlign: 'center', paddingTop: 4},
   expiring: {flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fffbeb', borderRadius: 18, padding: 14, marginTop: 14},
   expTitle: {fontWeight: '800', color: colors.text, fontSize: 13},
   expText: {color: colors.muted, fontSize: 12, marginTop: 1},

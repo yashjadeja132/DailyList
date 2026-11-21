@@ -24,7 +24,7 @@ const GROUP: Record<Filter, string[]> = {
 };
 const REASONS = ['Out of stock', 'Shop is closing', 'Too busy right now', 'Cannot prepare this order'];
 
-export default function OwnerOrdersScreen() {
+export default function OwnerOrdersScreen({route}: any) {
   const {shop} = useAuth();
   const dialog = useDialog();
   const [orders, setOrders] = useState<Order[] | null>(null);
@@ -41,6 +41,10 @@ export default function OwnerOrdersScreen() {
     try { setOrders(await api<Order[]>('/owner/orders')); setError(''); }
     catch (e: any) { setError(e.message); }
   }, []);
+
+  // coming from the home screen's "New orders" card: open on the New tab
+  const wanted = route?.params?.filter as Filter | undefined;
+  useFocusEffect(useCallback(() => { if (wanted) setFilter(wanted); }, [wanted, route?.params?.at]));
 
   useFocusEffect(useCallback(() => {
     load();
