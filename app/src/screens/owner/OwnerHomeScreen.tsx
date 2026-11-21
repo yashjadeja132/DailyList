@@ -9,6 +9,15 @@ import {api, Order, ShopState} from '../../api';
 import {useAuth} from '../../AuthContext';
 import {colors, shadowLift} from '../../theme';
 
+/** "5 min ago" from a server time (UTC, "YYYY-MM-DD HH:MM:SS") */
+const timeAgo = (t: string) => {
+  const m = Math.max(0, Math.round((Date.now() - new Date(t.replace(' ', 'T') + 'Z').getTime()) / 60000));
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m} min ago`;
+  const h = Math.floor(m / 60);
+  return h < 24 ? `${h} h ago` : `${Math.floor(h / 24)} d ago`;
+};
+
 const greeting = () => {
   const h = new Date().getHours();
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
@@ -110,9 +119,9 @@ export default function OwnerHomeScreen({navigation}: any) {
             </View>
           ) : null}
 
-          {/* is the shop taking new orders? */}
+          {/* 1. order acceptance control: is the shop taking new orders? (accepting / busy / paused) */}
           <View style={s.accepting}>
-            <Text style={s.acceptingTitle}>New orders</Text>
+            <Text style={s.acceptingTitle}>Accepting orders</Text>
             <View style={s.seg}>
               {([['open', 'Accepting', colors.primary], ['busy', 'Busy', colors.amber], ['closed', 'Paused', colors.danger]] as const).map(([k, label, c]) => {
                 const on = (shop?.accepting || 'open') === k;
@@ -128,22 +137,28 @@ export default function OwnerHomeScreen({navigation}: any) {
                 : shop?.accepting === 'busy' ? 'Customers can still send lists but see that replies may be slow.'
                 : 'Customers cannot send new lists until you accept orders again.'}
             </Text>
+          </View>
 
-            {/* the new orders themselves */}
-            <View style={s.newHead}>
-              <Text style={s.newTitle}>Waiting for you</Text>
+          {/* 2. new order inbox: received time, customer note and item count */}
+          <View style={s.accepting}>
+            <View style={s.newHeadTop}>
+              <Text style={s.acceptingTitle}>New orders</Text>
               <Text style={s.newCount}>{fresh.length}</Text>
             </View>
             {fresh.length === 0 ? (
-              <Text style={s.newEmpty}>No new orders right now.</Text>
+              <Text style={s.newEmpty}>No new orders right now. New requests will appear here.</Text>
             ) : fresh.slice(0, 4).map((o, i) => (
               <Pressable key={o.id} onPress={() => navigation.navigate('Queue', {filter: 'New', at: Date.now()})} style={[s.newRow, i > 0 && s.newRowBorder]}>
                 <Avatar name={o.customer_name} size={38} />
                 <View style={{flex: 1}}>
-                  <Text style={s.newName} numberOfLines={1}>{o.customer_name}</Text>
+                  <View style={s.newLine}>
+                    <Text style={[s.newName, {flex: 1}]} numberOfLines={1}>{o.customer_name}</Text>
+                    <Text style={s.newTime}>{timeAgo(o.created_at)}</Text>
+                  </View>
                   <Text style={s.newMeta} numberOfLines={1}>
                     {o.items.length} item{o.items.length > 1 ? 's' : ''} · {o.items.slice(0, 3).map(x => x.name).join(', ')}{o.items.length > 3 ? '…' : ''}
                   </Text>
+                  {o.note ? <Text style={s.newNote} numberOfLines={1}>“{o.note}”</Text> : null}
                 </View>
                 <View style={[s.newPill, o.status === 'Accepted' && {backgroundColor: '#fef3c7'}]}>
                   <Text style={[s.newPillText, o.status === 'Accepted' && {color: '#92400e'}]}>{o.status === 'Accepted' ? 'Checking' : 'New'}</Text>
@@ -193,8 +208,10 @@ const s = StyleSheet.create({
   segItem: {flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 10},
   segText: {fontWeight: '800', color: colors.muted, fontSize: 12},
   acceptingHint: {color: colors.muted, fontSize: 12},
-  newHead: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderColor: colors.border},
-  newTitle: {fontWeight: '800', color: colors.text, fontSize: 13},
+  newHeadTop: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
+  newLine: {flexDirection: 'row', alignItems: 'center', gap: 8},
+  newTime: {color: colors.muted, fontSize: 11},
+  newNote: {color: colors.muted, fontSize: 12, fontStyle: 'italic', marginTop: 1},
   newCount: {fontWeight: '800', color: colors.primaryDark, fontSize: 12, backgroundColor: colors.primarySoft, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 2, overflow: 'hidden'},
   newEmpty: {color: colors.muted, fontSize: 12},
   newRow: {flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8},
